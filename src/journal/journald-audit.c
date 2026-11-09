@@ -241,6 +241,23 @@ static const MapField map_fields_kernel[] = {
         {}
 };
 
+/* AUDIT_LOGIN records report a change of a process' login UID, and are formatted by the kernel as
+ * "pid=… uid=… subj=… old-auid=… auid=… tty=… old-ses=… ses=… res=…". The kernel generates them even if
+ * the change is refused (res=0), and auid= then carries the value the process asked for, which any
+ * process may ask for by writing to /proc/self/loginuid. Hence, take _AUDIT_LOGINUID= and
+ * _AUDIT_SESSION= from old-auid= and old-ses=, the values the process had when the record was
+ * generated, like they are taken for all other records. auid= and ses= are mapped generically to
+ * _AUDIT_FIELD_AUID= and _AUDIT_FIELD_SES=. */
+static const MapField map_fields_kernel_login[] = {
+        { "pid=",       "_PID=",              map_simple_field },
+        { "uid=",       "_UID=",              map_simple_field },
+        { "subj=",      "_SELINUX_CONTEXT=",  map_simple_field },
+        { "old-auid=",  "_AUDIT_LOGINUID=",   map_simple_field },
+        { "tty=",       "_TTY=",              map_simple_field },
+        { "old-ses=",   "_AUDIT_SESSION=",    map_simple_field },
+        {}
+};
+
 /* Userspace fields are those occurring in the audit string after
  * msg='. All of these fields are untrusted, hence carry no "_"
  * prefix. We map the fields we don't know to AUDIT_FIELD_XYZ= */
@@ -406,7 +423,8 @@ void process_audit_string(Manager *m, int type, const char *data, size_t size) {
 
         z = n;
 
-        map_all_fields(p, map_fields_kernel, "_AUDIT_FIELD_", true, iovec, &n, n + N_IOVEC_AUDIT_FIELDS);
+        map_all_fields(p, type == AUDIT_LOGIN ? map_fields_kernel_login : map_fields_kernel,
+                       "_AUDIT_FIELD_", true, iovec, &n, n + N_IOVEC_AUDIT_FIELDS);
 
         manager_count_message(m, JOURNAL_TRANSPORT_AUDIT, LOG_NOTICE);
 

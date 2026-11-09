@@ -240,7 +240,9 @@
         <listitem>
           <para>The session and login UID of the process the journal
           entry originates from, as maintained by the kernel audit
-          subsystem.</para>
+          subsystem. For <constant>AUDIT_LOGIN</constant> records, which
+          report a change of the login UID, these are the values before
+          the change.</para>
         </listitem>
       </varlistentry>
 

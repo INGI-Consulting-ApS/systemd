@@ -463,6 +463,16 @@ systemd-tmpfiles --create --prefix /var/log/journal</programlisting>
         depending on whether <literal>systemd-journald-audit.socket</literal> is enabled or
         not.</para>
 
+        <para>Audit records with a type below <constant>AUDIT_FIRST_USER_MSG</constant> (1100) are dropped,
+        except for <constant>AUDIT_USER</constant> (1005) and <constant>AUDIT_LOGIN</constant> (1006). The
+        rest of that range holds audit netlink control messages, such as rule management and daemon
+        configuration. <constant>AUDIT_LOGIN</constant> records report a change of a process' login UID,
+        including refused attempts. For these records, <varname>_AUDIT_LOGINUID=</varname> and
+        <varname>_AUDIT_SESSION=</varname> carry the values the process had before the change, and the
+        record's <literal>auid=</literal> and <literal>ses=</literal> fields, which may hold a value that
+        was refused, are stored as <varname>_AUDIT_FIELD_AUID=</varname> and
+        <varname>_AUDIT_FIELD_SES=</varname>.</para>
+
         <xi:include href="version-info.xml" xpointer="v228"/></listitem>
       </varlistentry>
 
